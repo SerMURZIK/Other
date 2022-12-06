@@ -2,24 +2,21 @@ import java.util.Scanner;
 
 public class Main {
 
-    public static String[] products = {"Хлеб", "Пачка гречки", "Упаковка яиц", "Мороженка"};
-    public static int[] prices = {50, 135, 65, 53};
+    public static Product[] products = {new Product("Хлеб", 50, true), new Product("Пачка гречки", 135, false),
+            new Product("Упаковка яиц", 65, false), new Product("Мороженка", 53, true)};
     public static int MIN_COST_FOR_BONUS = 1000;
 
     // В стоимости этих товаров каждые три товара должны стоить как два:
-    public static String[] productsOnSale = {"Хлеб", "Мороженка"};
 
     public static void main(String[] args) {
         System.out.println("Добро пожаловать в магазин!");
         System.out.println("Наш ассортимент:");
         for (int i = 0; i < products.length; i++) {
-            System.out.println("\t" + (i + 1) + ". " + products[i] + " за " + prices[i] + " за шт. ");
+            System.out.println("\t" + (i + 1) + ". " + products[i].getTitleOfProduct() + " за " + products[i].getPriceOfProduct() + " за шт. ");
         }
         System.out.println();
 
         Scanner scanner = new Scanner(System.in);
-
-        int[] counts = new int[products.length];
 
         while (true) {
             System.out.print("Введите номер товара и количество через пробел или end: ");
@@ -33,33 +30,46 @@ public class Main {
             int productNum = Integer.parseInt(parts[0]) - 1;
             int productCount = Integer.parseInt(parts[1]);
 
-            counts[productNum] += productCount;
+            products[productNum].addCountOfProducts(productCount);
         }
 
         System.out.println("Ваша корзина покупок:");
         int sum = 0;
+
         for (int i = 0; i < products.length; i++) {
-            if (counts[i] != 0) {
-                boolean isOnSale = false;
-                for (String saleProduct : productsOnSale) {
-                    if (products[i].equals(saleProduct)) {
-                        isOnSale = true;
+            if (products[i].isOnSale()) {
+                sum += products[i].getPriceOfProduct() * ((products[i].getCountOfProducts() / 3) * 2);
+            } else {
+                sum += products[i].getPriceOfProduct() * products[i].getCountOfProducts();
+            }
+        }
+
+        boolean doBonus = sum >= MIN_COST_FOR_BONUS;
+        sum = 0;
+
+        for (int i = 0; i < products.length; i++) {
+            if (products[i].getCountOfProducts() != 0) {
+
+                int countOfProductsForSaleing = doBonus ? products[i].getCountOfProducts() / 3 * 2 + 1 : products[i].getCountOfProducts() / 3 * 2;
+                int countOfProductsForNotSaleing = doBonus ? products[i].getCountOfProducts() + 1 : products[i].getCountOfProducts();
+
+                if (products[i].getCountOfProducts() / 3 * 2 == 0) {
+                    countOfProductsForSaleing = 1;
+                }
+
+                if (products[i].isOnSale()) {
+                    System.out.println("\t" + products[i].getTitleOfProduct() + " " + countOfProductsForSaleing + " шт. за " + products[i].getPriceOfProduct() + " руб. за шт. (распродажа!)");
+                    if (countOfProductsForSaleing == 1) {
+                        sum += products[i].getPriceOfProduct();
+                    } else {
+                        sum += countOfProductsForSaleing * products[i].getPriceOfProduct();
                     }
-                }
-
-                for (int j = 0; j < products.length; j++) {
-                    sum += isOnSale ? prices[i] * (counts[i] / 3 * 2 + counts[i] % 3) : prices[i] * counts[i];
-                }
-
-                boolean doBonus = sum >= MIN_COST_FOR_BONUS;
-                if (isOnSale) {
-                    System.out.println("\t" + products[i] + " " + (doBonus ? counts[i] + 1 : counts[i]) + " шт. за " + (prices[i] * (counts[i] / 3 * 2 + counts[i] % 3)) + " руб. (распродажа!)");
                 } else {
-                    System.out.println("\t" + products[i] + " " + (doBonus ? counts[i] + 1 : counts[i]) + " шт. за " + (prices[i] * counts[i]) + " руб.");
+                    System.out.println("\t" + products[i].getTitleOfProduct() + " " + countOfProductsForNotSaleing + " шт. за " + products[i].getPriceOfProduct() + " руб. за шт.");
+                    sum += countOfProductsForNotSaleing * products[i].getPriceOfProduct();
                 }
             }
         }
         System.out.println("Итого: " + sum + " руб.");
     }
-
 }
